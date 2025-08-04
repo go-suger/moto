@@ -12,7 +12,7 @@ type Transition[S, E comparable, C any] struct {
 	action    Action[S, E, C]
 }
 
-func NewTransition[S, E comparable, C any](source *State[S, E, C], target *State[S, E, C], event E, condition Condition[C], action Action[S, E, C]) *Transition[S, E, C] {
+func newTransition[S, E comparable, C any](source *State[S, E, C], target *State[S, E, C], event E, condition Condition[C], action Action[S, E, C]) *Transition[S, E, C] {
 	return &Transition[S, E, C]{
 		source:    source,
 		target:    target,

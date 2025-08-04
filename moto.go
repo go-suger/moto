@@ -81,10 +81,10 @@ type State[S, E comparable, C any] struct {
 	eventTransitions *EventTransitions[S, E, C]
 }
 
-func NewState[S, E comparable, C any](state S) *State[S, E, C] {
+func newState[S, E comparable, C any](state S) *State[S, E, C] {
 	return &State[S, E, C]{
 		state:            state,
-		eventTransitions: NewEventTransitions[S, E, C](),
+		eventTransitions: newEventTransitions[S, E, C](),
 	}
 }
 
@@ -97,7 +97,7 @@ func (s *State[S, E, C]) getEventTransitions(event E) []*Transition[S, E, C] {
 }
 
 func (s *State[S, E, C]) addTransition(event E, target *State[S, E, C]) (*Transition[S, E, C], error) {
-	transition := NewTransition(s, target, event, nil, nil)
+	transition := newTransition(s, target, event, nil, nil)
 	err := s.eventTransitions.Put(event, transition)
 	if err != nil {
 		return nil, errors.New("failed to add event to transition")

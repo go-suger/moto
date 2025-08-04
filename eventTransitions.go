@@ -11,7 +11,7 @@ type EventTransitions[S, E comparable, C any] struct {
 	eventTransitions map[E][]*Transition[S, E, C]
 }
 
-func NewEventTransitions[S, E comparable, C any]() *EventTransitions[S, E, C] {
+func newEventTransitions[S, E comparable, C any]() *EventTransitions[S, E, C] {
 	return &EventTransitions[S, E, C]{
 		eventTransitions: make(map[E][]*Transition[S, E, C]),
 	}

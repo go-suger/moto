@@ -38,6 +38,7 @@ type Order struct {
 }
 
 func main() {
+
 	builder := moto.New[OrderState, OrderEvent, Order]()
 	//
 	builder.ExternalTransition().
@@ -55,6 +56,8 @@ func main() {
 	if err != nil {
 		log.Println(err)
 	}
+
+	fmt.Println(fsm.GenerateMermaidGraph())
 
 	order := &Order{
 		Id: "1",
