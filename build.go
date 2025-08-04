@@ -35,7 +35,7 @@ func (b *StateMachineBuilder[S, E, C]) Build() (*StateMachine[S, E, C], error) {
 
 type TransitionBuild[S, E comparable, C any] struct {
 	stateMap map[S]*State[S, E, C]
-	errors   []error
+	errs     []error
 
 	sources     []*State[S, E, C]
 	target      *State[S, E, C]
@@ -47,7 +47,7 @@ func newTransitionBuild[S, E comparable, C any](stateMap map[S]*State[S, E, C], 
 		stateMap:    stateMap,
 		sources:     make([]*State[S, E, C], 0),
 		transitions: make([]*Transition[S, E, C], 0),
-		errors:      errs,
+		errs:        errs,
 	}
 }
 
@@ -82,7 +82,7 @@ func (tt *TransitionBuild[S, E, C]) On(event E) When[S, E, C] {
 	for _, source := range tt.sources {
 		transition, err := source.addTransition(event, tt.target)
 		if err != nil {
-			tt.errors = append(tt.errors, err)
+			tt.errs = append(tt.errs, err)
 			return tt
 		}
 
