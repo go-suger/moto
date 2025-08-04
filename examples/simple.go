@@ -1,9 +1,9 @@
 package main
 
 import (
-	"context"
 	"log"
-	"moto"
+
+	"github.com/go-suger/moto"
 )
 
 type OrderState string
@@ -40,19 +40,24 @@ func main() {
 	//
 	builder.ExternalTransition().
 		Form(CREATED).To(PAID).On(PAY).
-		When(func(form, to OrderState, context Order) {
+		WhenFunc(func(order Order) bool {
 
+			return false
 		}).
-		Perform(func(form, to OrderState, context Order) {
+		PerformFunc(func(from, to OrderState, event OrderEvent, order *Order) error {
 
+			return nil
 		})
 
-	fsm, err := builder.Build(context.Background())
+	fsm, err := builder.Build()
 	if err != nil {
 		log.Println(err)
 	}
 
-	if err = fsm.FireEvent(CREATED, PAY, Order{}); err != nil {
+	state, err := fsm.FireEvent(CREATED, PAY, &Order{})
+	if err != nil {
 		log.Println(err)
 	}
+
+	_ = state
 }
