@@ -5,7 +5,6 @@ import (
 )
 
 type StateMachine[S, E comparable, C any] struct {
-	// 状态map
 	stateMap map[S]*State[S, E, C]
 }
 
@@ -43,20 +42,18 @@ func (sm *StateMachine[S, E, C]) routeTransition(sourceStateVal S, event E, ctx 
 		return nil, err
 	}
 
-	var transitions = sourceState.getEventTransitions(event)
+	var transition = sourceState.getEventTransitions(event)
 
-	if transitions == nil || len(transitions) == 0 {
+	if transition == nil {
 		return nil, errors.New("transition is nil")
 	}
 
 	var transit *Transition[S, E, C] = nil
-	for _, transition := range transitions {
-		if transition.condition == nil {
-			transit = transition
-		} else if transition.condition.isSatisfied(*ctx) {
-			transit = transition
-			break
-		}
+
+	if transition.condition == nil {
+		transit = transition
+	} else if transition.condition.isSatisfied(*ctx) {
+		transit = transition
 	}
 
 	return transit, nil
@@ -92,7 +89,7 @@ func (s *State[S, E, C]) State() S {
 	return s.state
 }
 
-func (s *State[S, E, C]) getEventTransitions(event E) []*Transition[S, E, C] {
+func (s *State[S, E, C]) getEventTransitions(event E) *Transition[S, E, C] {
 	return s.eventTransitions.Get(event)
 }
 
