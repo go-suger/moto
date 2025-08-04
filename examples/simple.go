@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/go-suger/moto"
@@ -33,6 +34,7 @@ const (
 )
 
 type Order struct {
+	Id string
 }
 
 func main() {
@@ -42,10 +44,10 @@ func main() {
 		Form(CREATED).To(PAID).On(PAY).
 		WhenFunc(func(order Order) bool {
 
-			return false
+			return true
 		}).
 		PerformFunc(func(from, to OrderState, event OrderEvent, order *Order) error {
-
+			order.Id = "3dadd"
 			return nil
 		})
 
@@ -54,10 +56,16 @@ func main() {
 		log.Println(err)
 	}
 
-	state, err := fsm.FireEvent(CREATED, PAY, &Order{})
+	order := &Order{
+		Id: "1",
+	}
+	fmt.Println(order.Id)
+
+	state, err := fsm.FireEvent(CREATED, PAY, order)
 	if err != nil {
 		log.Println(err)
 	}
 
-	_ = state
+	fmt.Println(state)
+	fmt.Println(order.Id)
 }

@@ -39,7 +39,7 @@ func (tt *TransitionBuild[S, E, C]) To(state S) *TransitionBuild[S, E, C] {
 
 func (tt *TransitionBuild[S, E, C]) On(event E) *TransitionBuild[S, E, C] {
 	for _, source := range tt.sources {
-		transition := source.addTransition(event, tt.target)
+		transition, _ := source.addTransition(event, tt.target)
 		tt.transitions = append(tt.transitions, transition)
 	}
 

@@ -5,14 +5,14 @@ import (
 )
 
 type Transition[S, E comparable, C any] struct {
-	source    State[S, E, C]
-	target    State[S, E, C]
+	source    *State[S, E, C]
+	target    *State[S, E, C]
 	event     E
 	condition Condition[C]
 	action    Action[S, E, C]
 }
 
-func NewTransition[S, E comparable, C any](source State[S, E, C], target State[S, E, C], event E, condition Condition[C], action Action[S, E, C]) *Transition[S, E, C] {
+func NewTransition[S, E comparable, C any](source *State[S, E, C], target *State[S, E, C], event E, condition Condition[C], action Action[S, E, C]) *Transition[S, E, C] {
 	return &Transition[S, E, C]{
 		source:    source,
 		target:    target,
@@ -22,7 +22,7 @@ func NewTransition[S, E comparable, C any](source State[S, E, C], target State[S
 	}
 }
 
-func (tr Transition[S, E, C]) transit(ctx *C) (state State[S, E, C], err error) {
+func (tr Transition[S, E, C]) transit(ctx *C) (state *State[S, E, C], err error) {
 	if tr.source == tr.target {
 		err = errors.New("source and target states cannot be the same")
 		return
