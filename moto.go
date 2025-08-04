@@ -102,5 +102,6 @@ func (s *State[S, E, C]) addTransition(event E, target *State[S, E, C]) (*Transi
 	if err != nil {
 		return nil, errors.New("failed to add event to transition")
 	}
+
 	return transition, nil
 }

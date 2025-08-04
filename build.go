@@ -13,7 +13,7 @@ func New[S, E comparable, C any]() *StateMachineBuilder[S, E, C] {
 	}
 }
 
-func (b *StateMachineBuilder[S, E, C]) ExternalTransition() *TransitionBuild[S, E, C] {
+func (b *StateMachineBuilder[S, E, C]) ExternalTransition() Form[S, E, C] {
 	return NewTransitionBuild(b.stateMap)
 }
 
