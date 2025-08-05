@@ -12,6 +12,7 @@ type StateMachineBuilder[S, E comparable, C any] struct {
 	errs []error
 }
 
+// New create a state machine generator
 func New[S, E comparable, C any]() *StateMachineBuilder[S, E, C] {
 	stateMap := make(map[S]*State[S, E, C])
 	return &StateMachineBuilder[S, E, C]{
