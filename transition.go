@@ -1,6 +1,7 @@
 package moto
 
 import (
+	"context"
 	"errors"
 )
 
@@ -22,15 +23,15 @@ func newTransition[S, E comparable, C any](source *State[S, E, C], target *State
 	}
 }
 
-func (tr Transition[S, E, C]) transit(ctx *C) (state *State[S, E, C], err error) {
+func (tr *Transition[S, E, C]) transit(ctx context.Context, context *C) (state *State[S, E, C], err error) {
 	if tr.source == tr.target {
 		err = errors.New("source and target states cannot be the same")
 		return
 	}
 
-	if tr.condition != nil && tr.condition.isSatisfied(*ctx) {
+	if tr.condition != nil && tr.condition.isSatisfied(ctx, *context) {
 		if tr.action != nil {
-			if err = tr.action.execute(tr.source.State(), tr.target.State(), tr.event, ctx); err != nil {
+			if err = tr.action.execute(ctx, tr.source.State(), tr.target.State(), tr.event, context); err != nil {
 				return
 			} else {
 				return tr.target, nil

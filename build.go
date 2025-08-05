@@ -1,6 +1,7 @@
 package moto
 
 import (
+	"context"
 	"errors"
 )
 
@@ -22,7 +23,7 @@ func New[S, E comparable, C any]() *StateMachineBuilder[S, E, C] {
 
 func (b *StateMachineBuilder[S, E, C]) ExternalTransition() Form[S, E, C] {
 
-	return newTransitionBuild(b.stateMap, b.errs)
+	return newTransitionBuild(b.stateMap, &b.errs)
 }
 
 func (b *StateMachineBuilder[S, E, C]) Build() (*StateMachine[S, E, C], error) {
@@ -35,14 +36,14 @@ func (b *StateMachineBuilder[S, E, C]) Build() (*StateMachine[S, E, C], error) {
 
 type TransitionBuild[S, E comparable, C any] struct {
 	stateMap map[S]*State[S, E, C]
-	errs     []error
+	errs     *[]error
 
 	sources     []*State[S, E, C]
 	target      *State[S, E, C]
 	transitions []*Transition[S, E, C]
 }
 
-func newTransitionBuild[S, E comparable, C any](stateMap map[S]*State[S, E, C], errs []error) *TransitionBuild[S, E, C] {
+func newTransitionBuild[S, E comparable, C any](stateMap map[S]*State[S, E, C], errs *[]error) *TransitionBuild[S, E, C] {
 	return &TransitionBuild[S, E, C]{
 		stateMap:    stateMap,
 		sources:     make([]*State[S, E, C], 0),
@@ -82,7 +83,7 @@ func (tt *TransitionBuild[S, E, C]) On(event E) When[S, E, C] {
 	for _, source := range tt.sources {
 		transition, err := source.addTransition(event, tt.target)
 		if err != nil {
-			tt.errs = append(tt.errs, err)
+			*tt.errs = append(*tt.errs, err)
 			return tt
 		}
 
@@ -94,7 +95,7 @@ func (tt *TransitionBuild[S, E, C]) On(event E) When[S, E, C] {
 
 type When[S, E comparable, C any] interface {
 	When(condition Condition[C]) Perform[S, E, C]
-	WhenFunc(conditionFunc func(context C) bool) Perform[S, E, C]
+	WhenFunc(conditionFunc func(ctx context.Context, context C) bool) Perform[S, E, C]
 }
 
 func (tt *TransitionBuild[S, E, C]) When(condition Condition[C]) Perform[S, E, C] {
@@ -105,14 +106,15 @@ func (tt *TransitionBuild[S, E, C]) When(condition Condition[C]) Perform[S, E, C
 	return tt
 }
 
-func (tt *TransitionBuild[S, E, C]) WhenFunc(conditionFunc func(context C) bool) Perform[S, E, C] {
+func (tt *TransitionBuild[S, E, C]) WhenFunc(conditionFunc func(ctx context.Context, context C) bool) Perform[S, E, C] {
 	tt.When(&SimpleConditionImpl[C]{condition: conditionFunc})
+
 	return tt
 }
 
 type Perform[S, E comparable, C any] interface {
 	Perform(action Action[S, E, C])
-	PerformFunc(actionFunc func(from, to S, event E, context *C) error)
+	PerformFunc(actionFunc func(ctx context.Context, from, to S, event E, context *C) error)
 }
 
 func (tt *TransitionBuild[S, E, C]) Perform(action Action[S, E, C]) {
@@ -121,6 +123,6 @@ func (tt *TransitionBuild[S, E, C]) Perform(action Action[S, E, C]) {
 	}
 }
 
-func (tt *TransitionBuild[S, E, C]) PerformFunc(actionFunc func(from, to S, event E, context *C) error) {
+func (tt *TransitionBuild[S, E, C]) PerformFunc(actionFunc func(ctx context.Context, from, to S, event E, context *C) error) {
 	tt.Perform(&SimpleActionImpl[S, E, C]{action: actionFunc})
 }

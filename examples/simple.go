@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -38,34 +39,33 @@ type Order struct {
 }
 
 func main() {
-
 	builder := moto.New[OrderState, OrderEvent, Order]()
 	//
 	builder.ExternalTransition().
 		Form(CREATED, DONE).To(PAID).On(PAY).
-		WhenFunc(func(order Order) bool {
-
+		WhenFunc(func(ctx context.Context, order Order) bool {
 			return true
 		}).
-		PerformFunc(func(from, to OrderState, event OrderEvent, order *Order) error {
+		PerformFunc(func(ctx context.Context, from, to OrderState, event OrderEvent, order *Order) error {
+			log.Println("dad")
 			order.Id = "3dadd"
 			return nil
 		})
 
 	builder.ExternalTransition().
-		Form(CREATED, DONE).To(PAID).On(PAY).
-		WhenFunc(func(order Order) bool {
-
+		Form(CREATED, DONE).To(PAID).On(DELIVER).
+		WhenFunc(func(ctx context.Context, context Order) bool {
 			return true
 		}).
-		PerformFunc(func(from, to OrderState, event OrderEvent, order *Order) error {
+		PerformFunc(func(ctx context.Context, from, to OrderState, event OrderEvent, order *Order) error {
 			order.Id = "3dadd"
 			return nil
 		})
-
+	//
 	fsm, err := builder.Build()
 	if err != nil {
 		log.Println(err)
+		return
 	}
 
 	fmt.Println(fsm.GenerateMermaidGraph())
@@ -75,7 +75,7 @@ func main() {
 	}
 	fmt.Println(order.Id)
 
-	state, err := fsm.FireEvent(DONE, PAY, order)
+	state, err := fsm.FireEvent(context.Background(), DONE, PAY, order)
 	if err != nil {
 		log.Println(err)
 	}

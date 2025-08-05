@@ -1,6 +1,7 @@
 package moto
 
 import (
+	"context"
 	"errors"
 )
 
@@ -12,13 +13,13 @@ func newStateMachine[S, E comparable, C any](stateMap map[S]*State[S, E, C]) *St
 	return &StateMachine[S, E, C]{stateMap: stateMap}
 }
 
-func (sm *StateMachine[S, E, C]) FireEvent(sourceState S, event E, ctx *C) (stateVal S, err error) {
-	if ctx == nil {
+func (sm *StateMachine[S, E, C]) FireEvent(ctx context.Context, sourceState S, event E, context *C) (stateVal S, err error) {
+	if context == nil {
 		err = errors.New("ctx is nil")
 		return
 	}
 
-	transition, err := sm.routeTransition(sourceState, event, ctx)
+	transition, err := sm.routeTransition(ctx, sourceState, event, *context)
 	if err != nil {
 		return
 	}
@@ -28,7 +29,7 @@ func (sm *StateMachine[S, E, C]) FireEvent(sourceState S, event E, ctx *C) (stat
 		return
 	}
 
-	state, err := transition.transit(ctx)
+	state, err := transition.transit(ctx, context)
 	if err != nil {
 		return
 	}
@@ -36,14 +37,13 @@ func (sm *StateMachine[S, E, C]) FireEvent(sourceState S, event E, ctx *C) (stat
 	return state.State(), nil
 }
 
-func (sm *StateMachine[S, E, C]) routeTransition(sourceStateVal S, event E, ctx *C) (*Transition[S, E, C], error) {
+func (sm *StateMachine[S, E, C]) routeTransition(ctx context.Context, sourceStateVal S, event E, context C) (*Transition[S, E, C], error) {
 	sourceState, err := sm.getState(sourceStateVal)
 	if err != nil {
 		return nil, err
 	}
 
 	var transition = sourceState.getEventTransitions(event)
-
 	if transition == nil {
 		return nil, errors.New("transition is nil")
 	}
@@ -52,7 +52,7 @@ func (sm *StateMachine[S, E, C]) routeTransition(sourceStateVal S, event E, ctx 
 
 	if transition.condition == nil {
 		transit = transition
-	} else if transition.condition.isSatisfied(*ctx) {
+	} else if transition.condition.isSatisfied(ctx, context) {
 		transit = transition
 	}
 
@@ -95,8 +95,8 @@ func (s *State[S, E, C]) getEventTransitions(event E) *Transition[S, E, C] {
 
 func (s *State[S, E, C]) addTransition(event E, target *State[S, E, C]) (*Transition[S, E, C], error) {
 	transition := newTransition(s, target, event, nil, nil)
-	err := s.eventTransitions.Put(event, transition)
-	if err != nil {
+
+	if err := s.eventTransitions.Put(event, transition); err != nil {
 		return nil, errors.New("failed to add event to transition")
 	}
 
